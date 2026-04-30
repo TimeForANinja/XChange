@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XChange - Admin Panel</title>
+    <script src="/assets/tailwind.min.js"></script>
+    <script src="/assets/app.js"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' };
+        initTheme();
+    </script>
+</head>
+<body class="bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-200">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <header class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold">XChange Admin</h1>
+            <div class="flex items-center gap-4">
+                <a href="/" class="text-blue-500 hover:underline">Back to Main</a>
+                <button id="theme-toggle" onclick="toggleTheme()" class="p-2 rounded-lg bg-gray-200 dark:bg-gray-700">
+                    <span class="dark:hidden">🌙</span>
+                    <span class="hidden dark:inline">☀️</span>
+                </button>
+            </div>
+        </header>
+
+        <div id="login-section" class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md max-w-md mx-auto">
+            <h2 class="text-xl font-semibold mb-4">Login</h2>
+            <div class="space-y-4">
+                <input type="password" id="admin-token" placeholder="Admin Token" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600">
+                <button onclick="login()" class="w-full bg-blue-600 text-white font-bold py-2 rounded">Access Admin Panel</button>
+            </div>
+        </div>
+
+        <div id="admin-section" class="hidden space-y-6">
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                <div class="flex flex-wrap gap-4 items-end mb-6">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Filter by Type</label>
+                        <select id="filter-type" onchange="loadItems()" class="p-2 border rounded dark:bg-gray-700 dark:border-gray-600">
+                            <option value="">All Types</option>
+                            <option value="text">Text</option>
+                            <option value="link">Link</option>
+                            <option value="file">File</option>
+                            <option value="image">Image</option>
+                        </select>
+                    </div>
+                    <div class="flex-grow">
+                        <label class="block text-sm font-medium mb-1">Search ID</label>
+                        <input type="text" id="filter-search" oninput="loadItems()" placeholder="Search ID..." class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600">
+                    </div>
+                    <button onclick="logout()" class="bg-red-600 text-white px-4 py-2 rounded">Logout</button>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left">
+                        <thead>
+                            <tr class="border-b dark:border-gray-700">
+                                <th class="py-3 px-2">ID</th>
+                                <th class="py-3 px-2">Type</th>
+                                <th class="py-3 px-2">Access</th>
+                                <th class="py-3 px-2">Last Access</th>
+                                <th class="py-3 px-2">Created</th>
+                                <th class="py-3 px-2">Expires</th>
+                                <th class="py-3 px-2 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="items-list">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="edit-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-6">
+            <h2 class="text-xl font-bold mb-4">Edit Item</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">ID</label>
+                    <input type="text" id="edit-id" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Access Limit</label>
+                    <select id="edit-access-limit" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600">
+                        <option value="1">1 Access</option>
+                        <option value="10">10 Accesses</option>
+                        <option value="100">100 Accesses</option>
+                        <option id="edit-unlimited-usage" value="0">Unlimited</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Time Limit (from now)</label>
+                    <select id="edit-time-limit" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600">
+                        <option value="1d">1 Day</option>
+                        <option value="7d">7 Days</option>
+                        <option value="30d">30 Days</option>
+                        <option id="edit-unlimited-age" value="unlimited">Unlimited</option>
+                    </select>
+                </div>
+                <div class="flex justify-end gap-3 mt-6">
+                    <button onclick="closeEditModal()" class="px-4 py-2 border rounded hover:bg-gray-50 dark:hover:bg-gray-700">Cancel</button>
+                    <button onclick="saveItem()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const tokenInput = document.getElementById('admin-token');
+        const loginSection = document.getElementById('login-section');
+        const adminSection = document.getElementById('admin-section');
+        const editModal = document.getElementById('edit-modal');
+        let currentEditId = null;
+
+        // Initialize
+        const savedToken = localStorage.getItem('admin_token');
+        if (savedToken) {
+            tokenInput.value = savedToken;
+            loadItems();
+        }
+
+
+        function login() {
+            localStorage.setItem('admin_token', tokenInput.value);
+            loadItems();
+        }
+
+        function logout() {
+            localStorage.removeItem('admin_token');
+            loginSection.classList.remove('hidden');
+            adminSection.classList.add('hidden');
+        }
+
+        function copyLink(url) {
+            navigator.clipboard.writeText(url).then(() => {
+                showNotification('Copied to clipboard!');
+            }).catch(err => {
+                console.error('Could not copy text: ', err);
+            });
+        }
+
+        async function loadItems() {
+            const token = localStorage.getItem('admin_token');
+            const type = document.getElementById('filter-type').value;
+            const search = document.getElementById('filter-search').value;
+            
+            let url = `/admin/items?type=${type}&search=${search}`;
+
+            try {
+                const response = await fetch(url, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        showNotification('Invalid token', 'error');
+                        logout();
+                    } else {
+                        throw new Error('Error loading items');
+                    }
+                    return;
+                }
+                
+                loginSection.classList.add('hidden');
+                adminSection.classList.remove('hidden');
+
+                const data = await response.json();
+                const list = document.getElementById('items-list');
+                list.innerHTML = '';
+                
+                data.forEach(item => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition';
+                    tr.innerHTML = `
+                        <td class="py-3 px-2 font-mono">${item.id}</td>
+                        <td class="py-3 px-2"><span class="px-2 py-1 rounded text-xs bg-gray-200 dark:bg-gray-600">${item.type}</span></td>
+                        <td class="py-3 px-2">${item.access_count} / ${item.access_limit || '∞'}</td>
+                        <td class="py-3 px-2 text-gray-500">${item.last_access ? new Date(item.last_access).toLocaleString() : 'Never'}</td>
+                        <td class="py-3 px-2 text-gray-500">${new Date(item.created_at).toLocaleString()}</td>
+                        <td class="py-3 px-2 text-gray-500">${item.expires_at ? new Date(item.expires_at).toLocaleString() : 'Never'}</td>
+                        <td class="py-3 px-2 text-right space-x-2">
+                            <button onclick="copyLink('${item.uri}')" title="Copy Link" class="text-green-500 hover:text-green-700">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                </svg>
+                            </button>
+                            <button onclick='openEditModal(${JSON.stringify(item)})' class="text-blue-500 hover:underline">Edit</button>
+                            <button onclick="deleteItem('${item.id}')" class="text-red-500 hover:underline text-sm">Delete</button>
+                        </td>
+                    `;
+                    list.appendChild(tr);
+                });
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function deleteItem(id) {
+            if (!confirm('Are you sure you want to delete this item?')) return;
+            const token = localStorage.getItem('admin_token');
+            try {
+                const response = await fetch('/admin/items/' + id, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (response.ok) {
+                    showNotification('Deleted successfully');
+                    loadItems();
+                } else {
+                    showNotification('Failed to delete', 'error');
+                }
+            } catch (err) {
+                showNotification('Error', 'error');
+            }
+        }
+
+        function openEditModal(item) {
+            currentEditId = item.id;
+            document.getElementById('edit-id').value = item.id;
+            document.getElementById('edit-access-limit').value = item.access_limit;
+            // For time limit, we don't know the original one, so we default to 'unlimited' or keep current
+            // Actually, setting a new time limit from NOW is the behavior we implemented.
+            document.getElementById('edit-time-limit').value = item.expires_at ? '30d' : 'unlimited'; 
+            editModal.classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            editModal.classList.add('hidden');
+            currentEditId = null;
+        }
+
+        async function saveItem() {
+            const token = localStorage.getItem('admin_token');
+            const data = {
+                id: document.getElementById('edit-id').value,
+                access_limit: parseInt(document.getElementById('edit-access-limit').value),
+                time_limit: document.getElementById('edit-time-limit').value
+            };
+
+            try {
+                const response = await fetch('/admin/items/' + currentEditId, {
+                    method: 'PATCH',
+                    headers: { 
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    showNotification('Saved successfully');
+                    closeEditModal();
+                    loadItems();
+                } else {
+                    const errData = await response.json();
+                    showNotification('Failed to save: ' + (errData.message || response.statusText), 'error');
+                }
+            } catch (err) {
+                showNotification('Error saving item', 'error');
+            }
+        }
+    </script>
+</body>
+</html>

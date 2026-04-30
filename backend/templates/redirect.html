@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Redirecting...</title>
+    <meta http-equiv="refresh" content="5;url={{ url }}">
+    <script src="/assets/tailwind.min.js"></script>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 flex items-center justify-center h-screen">
+    <div class="text-center">
+        <p class="text-xl dark:text-white">Redirecting to <span class="font-bold break-all">{{ url }}</span> in <span id="countdown">5</span> seconds...</p>
+        <a href="{{ url }}" class="text-blue-500 underline mt-4 block">Click here if not redirected automatically</a>
+    </div>
+
+    <script>
+        let seconds = 5;
+        const countdownEl = document.getElementById('countdown');
+        const interval = setInterval(() => {
+            seconds--;
+            if (seconds <= 0) {
+                clearInterval(interval);
+            } else {
+                countdownEl.textContent = seconds;
+            }
+        }, 1000);
+    </script>
+</body>
+</html>

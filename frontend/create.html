@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XChange - Create New Item</title>
+    <script src="/assets/tailwind.min.js"></script>
+    <script src="/assets/prism.min.js"></script>
+    <script src="/assets/prism-python.min.js"></script>
+    <script src="/assets/prism-json.min.js"></script>
+    <script src="/assets/prism-bash.min.js"></script>
+    <script src="/assets/prism-markdown.min.js"></script>
+    <script src="/assets/prism-javascript.min.js"></script>
+    <link rel="stylesheet" href="/assets/prism-tomorrow.min.css" id="prism-theme">
+    <script src="/assets/app.js"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' };
+        initTheme();
+    </script>
+</head>
+<body class="bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-200">
+    <div id="app" class="container mx-auto px-4 py-8 max-w-2xl">
+        <header class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold cursor-pointer" onclick="window.location.href='/'">XChange</h1>
+            <div class="flex items-center gap-2">
+                <button id="theme-toggle" onclick="toggleTheme()" class="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+                    <span class="dark:hidden">🌙</span>
+                    <span class="hidden dark:inline">☀️</span>
+                </button>
+            </div>
+        </header>
+
+        <div id="create-section">
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                <h2 class="text-xl font-semibold mb-4">Create New Item</h2>
+                <form id="create-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Type</label>
+                        <select id="type" name="type" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600">
+                            <option value="text">Text</option>
+                            <option value="link">Link</option>
+                            <option value="file">File</option>
+                        </select>
+                    </div>
+
+                    <div id="content-input">
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block text-sm font-medium">Content</label>
+                            <button type="button" onclick="clearForm()" class="text-xs bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition">Clear</button>
+                        </div>
+                        <textarea id="content" name="content" rows="6" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 font-mono text-sm" placeholder="Enter text or code snippet..."></textarea>
+                        <input type="url" id="link-content" name="content" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 hidden" placeholder="https://example.com" disabled>
+                        
+                        <div id="create-preview" class="mt-4 hidden">
+                            <p class="text-xs font-medium text-gray-500 mb-1 uppercase">Live Preview:</p>
+                            <pre class="rounded-lg overflow-auto max-h-60 text-sm"><code id="create-preview-code"></code></pre>
+                        </div>
+                    </div>
+
+                    <div id="file-input" class="hidden">
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block text-sm font-medium">Upload File / Image</label>
+                            <button type="button" onclick="clearForm()" class="text-xs bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition">Clear</button>
+                        </div>
+                        <div id="drop-zone" class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center hover:bg-gray-100 dark:hover:bg-gray-700 transition cursor-pointer">
+                            <p id="drop-text" class="text-gray-500">Drag & Drop file here, or click to select</p>
+                            <p class="text-xs text-gray-400 mt-1">or strg + v to paste from clipboard</p>
+                            <input type="file" id="file" name="file" class="hidden">
+                        </div>
+                        <div id="image-preview" class="mt-4 hidden">
+                            <p class="text-sm mb-1 text-gray-500">Preview:</p>
+                            <img id="preview-img" class="w-full rounded shadow-sm">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Access Limit</label>
+                            <select id="access_limit" name="access_limit" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600">
+                                <option value="0" id="access-unlimited">Unlimited</option>
+                                <option value="1">1 Access</option>
+                                <option value="10">10 Accesses</option>
+                                <option value="100">100 Accesses</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Time Limit</label>
+                            <select id="time_limit" name="time_limit" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600">
+                                <option value="unlimited" id="time-unlimited">Unlimited</option>
+                                <option value="1d">1 Day</option>
+                                <option value="7d">7 Days</option>
+                                <option value="30d">30 Days</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Name Style</label>
+                            <select id="name_type" name="name_type" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600">
+                                <option value="human">3 English Words</option>
+                                <option value="base64">Short Base64</option>
+                            </select>
+                        </div>
+                        <div id="fast-forward-container" class="hidden">
+                            <label class="block text-sm font-medium mb-1">Fast Forward</label>
+                            <select id="fast_forward" name="fast_forward" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600">
+                                <option value="true">Instant Redirect</option>
+                                <option value="false">Show 5s Page</option>
+                            </select>
+                        </div>
+                        <div id="syntax-container">
+                            <label class="block text-sm font-medium mb-1">Syntax</label>
+                            <select id="syntax" name="syntax" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600">
+                                <option value="plain">Plain Text</option>
+                                <option value="javascript">JavaScript / JS</option>
+                                <option value="python">Python</option>
+                                <option value="markup">HTML / XML</option>
+                                <option value="css">CSS</option>
+                                <option value="json">JSON</option>
+                                <option value="bash">Bash / Shell</option>
+                                <option value="markdown">Markdown</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition">
+                        Create
+                    </button>
+                </form>
+            </div>
+
+            <div id="result" class="mt-8 hidden p-4 bg-green-100 dark:bg-green-900 border border-green-400 text-green-700 dark:text-green-200 rounded">
+                <p class="font-bold">Created successfully!</p>
+                <div class="mt-4">
+                    <label class="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">View / Redirect URL</label>
+                    <div class="flex items-center mt-1">
+                        <input id="result-url" readonly class="flex-grow p-2 border rounded-l dark:bg-gray-700 dark:border-gray-600 text-sm">
+                        <button onclick="copyResult('result-url')" class="bg-green-600 text-white px-4 py-2 rounded-r hover:bg-green-700 transition">Copy</button>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <label class="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Raw URL (for curl)</label>
+                    <div class="flex items-center mt-1">
+                        <input id="result-raw-url" readonly class="flex-grow p-2 border rounded-l dark:bg-gray-700 dark:border-gray-600 text-sm">
+                        <button onclick="copyResult('result-raw-url')" class="bg-green-600 text-white px-4 py-2 rounded-r hover:bg-green-700 transition">Copy</button>
+                    </div>
+                    <p class="text-[10px] mt-1 text-gray-500 dark:text-gray-400 font-mono">curl -L <span class="raw-url-placeholder">URL</span></p>
+                </div>
+            </div>
+        </div>
+
+        <footer class="mt-12 text-center text-sm text-gray-500">
+            <a href="/admin" id="admin-link" class="hover:underline hidden">Admin Panel</a>
+        </footer>
+    </div>
+
+    <script>
+        // Initialize logic
+        loadConfig().then(config => {
+            if (config) {
+                if (config.ENABLE_ADMIN_UI) document.getElementById('admin-link').classList.remove('hidden');
+                if (!config.ENABLE_UNLIMITED_USAGE) {
+                    document.getElementById('access-unlimited')?.remove();
+                }
+                if (!config.ENABLE_UNLIMITED_AGE) {
+                    document.getElementById('time-unlimited')?.remove();
+                }
+                if (!config.ENABLE_FAST_FORWARD) {
+                    document.getElementById('fast-forward-container').classList.add('hidden');
+                    document.getElementById('fast_forward').value = 'false';
+                }
+            }
+        });
+        setupCreateForm();
+    </script>
+</body>
+</html>

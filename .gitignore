@@ -1,0 +1,10 @@
+# files used when ran
+data
+.env
+
+# dev environment
+.venv
+.idea
+
+# python
+__pycache__

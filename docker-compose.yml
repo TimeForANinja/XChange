@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - XCHANGE_BASE_URL=http://localhost:5000
+      - XCHANGE_ENABLE_ADMIN_UI=true
+      - XCHANGE_ENABLE_UNLIMITED_USAGE=true
+      - XCHANGE_ENABLE_UNLIMITED_AGE=true
+      - XCHANGE_ENABLE_FAST_FORWARD=true
+      - XCHANGE_ALLOW_CREATE_FROM=
+      - XCHANGE_MONGO_USER=appuser
+      - XCHANGE_MONGO_PASSWORD=apppw
+      - XCHANGE_MONGO_HOST=mongodb
+      - XCHANGE_MAX_FILE_SIZE=20971520 # 20MB
+    depends_on:
+      - mongodb
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+    ports:
+      - "27017:27017"
+    volumes:
+      # Mounts a volume for (persistent) MongoDB data
+      - ./data/mongodb/data/db:/data/db
+      - ./data/mongodb/log:/var/log/mongodb
+    restart: unless-stopped
+    environment:
+      # Sets a MongoDB root user and password
+      MONGO_INITDB_ROOT_USERNAME: appuser
+      MONGO_INITDB_ROOT_PASSWORD: apppw
