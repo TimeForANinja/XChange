@@ -17,6 +17,7 @@
             <h1 class="text-3xl font-bold">XChange Admin</h1>
             <div class="flex items-center gap-4">
                 <a href="/" class="text-blue-500 hover:underline">Back to Main</a>
+                <button id="admin-logout" onclick="logout()" class="hidden bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition">Logout</button>
                 <button id="theme-toggle" onclick="toggleTheme()" class="p-2 rounded-lg bg-gray-200 dark:bg-gray-700">
                     <span class="dark:hidden">🌙</span>
                     <span class="hidden dark:inline">☀️</span>
@@ -27,7 +28,7 @@
         <div id="login-section" class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md max-w-md mx-auto">
             <h2 class="text-xl font-semibold mb-4">Login</h2>
             <div class="space-y-4">
-                <input type="password" id="admin-token" placeholder="Admin Token" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600">
+                <input type="password" id="admin-token" placeholder="Admin Token" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600" onkeydown="if(event.key === 'Enter') login()">
                 <button onclick="login()" class="w-full bg-blue-600 text-white font-bold py-2 rounded">Access Admin Panel</button>
             </div>
         </div>
@@ -49,7 +50,6 @@
                         <label class="block text-sm font-medium mb-1">Search ID</label>
                         <input type="text" id="filter-search" oninput="loadItems()" placeholder="Search ID..." class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600">
                     </div>
-                    <button onclick="logout()" class="bg-red-600 text-white px-4 py-2 rounded">Logout</button>
                 </div>
 
                 <div class="overflow-x-auto">
@@ -132,6 +132,7 @@
             localStorage.removeItem('admin_token');
             loginSection.classList.remove('hidden');
             adminSection.classList.add('hidden');
+            document.getElementById('admin-logout').classList.add('hidden');
         }
 
         function copyLink(url) {
@@ -165,6 +166,7 @@
                 
                 loginSection.classList.add('hidden');
                 adminSection.classList.remove('hidden');
+                document.getElementById('admin-logout').classList.remove('hidden');
 
                 const data = await response.json();
                 const list = document.getElementById('items-list');
