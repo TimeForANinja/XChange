@@ -2,7 +2,10 @@ version: '3.8'
 
 services:
   app:
-    build: .
+    # toggle between building and using the image
+    image: ghcr.io/timeforaninja/xchange:main
+    #build: .
+
     ports:
       - "5000:5000"
     environment:
