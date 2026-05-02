@@ -1,7 +1,11 @@
 version: '3.8'
 
+# user and password shared bewteen app and db
+x-mongodb-user: &mongodb_user appuser
+x-mongodb-password: &mongodb_password apppw
+
 services:
-  app:
+  xchange:
     # toggle between building and using the image
     image: ghcr.io/timeforaninja/xchange:main
     #build: .
@@ -9,16 +13,18 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - XCHANGE_BASE_URL=http://localhost:5000
-      - XCHANGE_ENABLE_ADMIN_UI=true
-      - XCHANGE_ENABLE_UNLIMITED_USAGE=true
-      - XCHANGE_ENABLE_UNLIMITED_AGE=true
-      - XCHANGE_ENABLE_FAST_FORWARD=true
-      - XCHANGE_ALLOW_CREATE_FROM=
-      - XCHANGE_MONGO_USER=appuser
-      - XCHANGE_MONGO_PASSWORD=apppw
-      - XCHANGE_MONGO_HOST=mongodb
-      - XCHANGE_MAX_FILE_SIZE=20971520 # 20MB
+      XCHANGE_BASE_URL: http://localhost:5000
+      XCHANGE_ENABLE_ADMIN_UI: "true"
+      XCHANGE_ADMIN_TOKEN: admin-secret
+      XCHANGE_ENABLE_UNLIMITED_USAGE: "true"
+      XCHANGE_ENABLE_UNLIMITED_AGE: "true"
+      XCHANGE_ENABLE_FAST_FORWARD: "true"
+      XCHANGE_ALLOW_CREATE_FROM:
+      XCHANGE_MAX_FILE_SIZE: 20971520 # 20MB
+
+      XCHANGE_MONGO_USER: *mongodb_user
+      XCHANGE_MONGO_PASSWORD: *mongodb_password
+      XCHANGE_MONGO_HOST: mongodb
     depends_on:
       - mongodb
 
@@ -27,8 +33,8 @@ services:
     container_name: mongodb
     healthcheck:
       test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
-    ports:
-      - "27017:27017"
+    #ports:
+    #  - "27017:27017"
     volumes:
       # Mounts a volume for (persistent) MongoDB data
       - ./data/mongodb/data/db:/data/db
@@ -36,5 +42,5 @@ services:
     restart: unless-stopped
     environment:
       # Sets a MongoDB root user and password
-      MONGO_INITDB_ROOT_USERNAME: appuser
-      MONGO_INITDB_ROOT_PASSWORD: apppw
+      MONGO_INITDB_ROOT_USERNAME: *mongodb_user
+      MONGO_INITDB_ROOT_PASSWORD: *mongodb_password
