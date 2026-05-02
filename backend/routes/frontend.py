@@ -8,17 +8,21 @@ def send_assets(path: str):
     """Serve static assets (JS, CSS)."""
     return send_from_directory('../frontend/assets', path)
 
+def is_creation_allowed():
+    """Check if creation is allowed from the current host."""
+    allowed_hosts = current_app.config.get('ALLOW_CREATE_FROM', [])
+    if not allowed_hosts:
+        return True
+    
+    current_host = request.host
+    current_domain = current_host.split(':')[0]
+    return current_host in allowed_hosts or current_domain in allowed_hosts
+
 @frontend_bp.get('/')
 def index():
     """Serve main frontend page."""
-    # Check if creation is allowed from this domain
-    allowed_hosts = current_app.config.get('ALLOW_CREATE_FROM', [])
-    if allowed_hosts:
-        current_host = request.host
-        current_domain = current_host.split(':')[0]
-        # Strict FQDN check as requested
-        if current_host not in allowed_hosts and current_domain not in allowed_hosts:
-            return "Creation is not allowed from this domain. You can only view items.", 403
+    if not is_creation_allowed():
+        return send_from_directory('../frontend', 'forbidden.html'), 403
     
     return send_from_directory('../frontend', 'create.html')
 
@@ -32,4 +36,8 @@ def admin_page():
     """Serve admin frontend page."""
     if not current_app.config['ENABLE_ADMIN_UI']:
         abort(404)
+    
+    if not is_creation_allowed():
+        return send_from_directory('../frontend', 'forbidden.html'), 403
+
     return send_from_directory('../frontend', 'admin.html')
